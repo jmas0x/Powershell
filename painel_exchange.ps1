@@ -6,65 +6,69 @@ Add-Type -AssemblyName System.Drawing
 # =========================
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Painel Exchange 2016 - Monitoramento"
-$form.Size = New-Object System.Drawing.Size(900,850)
+$form.Size = New-Object System.Drawing.Size(1280,720)
 $form.StartPosition = "CenterScreen"
+$form.AutoScroll = $true
+$form.AutoScrollMinSize = New-Object System.Drawing.Size(1400,900)
 
 # =========================
 # Lista de filas
 # =========================
 $queueList = New-Object System.Windows.Forms.ListBox
 $queueList.Location = New-Object System.Drawing.Point(10,40)
-$queueList.Size = New-Object System.Drawing.Size(250,500)
+$queueList.Size = New-Object System.Drawing.Size(300,500)
 $form.Controls.Add($queueList)
 
 # Botão para carregar filas
 $btnLoadQueues = New-Object System.Windows.Forms.Button
 $btnLoadQueues.Text = "Carregar Filas"
 $btnLoadQueues.Location = New-Object System.Drawing.Point(10,10)
-$btnLoadQueues.Size = New-Object System.Drawing.Size(250,25)
+$btnLoadQueues.Size = New-Object System.Drawing.Size(300,25)
 $form.Controls.Add($btnLoadQueues)
 
 # =========================
 # Grid de mensagens da fila
 # =========================
 $msgGrid = New-Object System.Windows.Forms.DataGridView
-$msgGrid.Location = New-Object System.Drawing.Point(270,40)
-$msgGrid.Size = New-Object System.Drawing.Size(600,500)
+$msgGrid.Location = New-Object System.Drawing.Point(320,40)
+$msgGrid.Size = New-Object System.Drawing.Size(900,500)
 $msgGrid.ReadOnly = $true
 $msgGrid.AllowUserToAddRows = $false
 $msgGrid.AllowUserToDeleteRows = $false
 $msgGrid.AutoSizeColumnsMode = "AllCells"
+$msgGrid.ScrollBars = "Both"
 $form.Controls.Add($msgGrid)
 
 # =========================
 # Grid de serviços Exchange
 # =========================
 $serviceGrid = New-Object System.Windows.Forms.DataGridView
-$serviceGrid.Location = New-Object System.Drawing.Point(10,550)
-$serviceGrid.Size = New-Object System.Drawing.Size(860,120)
+$serviceGrid.Location = New-Object System.Drawing.Point(10,560)
+$serviceGrid.Size = New-Object System.Drawing.Size(1210,120)
 $serviceGrid.ReadOnly = $true
 $serviceGrid.AllowUserToAddRows = $false
 $serviceGrid.AllowUserToDeleteRows = $false
 $serviceGrid.AutoSizeColumnsMode = "Fill"
+$serviceGrid.ScrollBars = "Both"
 $form.Controls.Add($serviceGrid)
 
 # =========================
 # Grid de erros do Exchange
 # =========================
 $errorGrid = New-Object System.Windows.Forms.DataGridView
-$errorGrid.Location = New-Object System.Drawing.Point(10,680)
-$errorGrid.Size = New-Object System.Drawing.Size(860,120)
+$errorGrid.Location = New-Object System.Drawing.Point(10,690)
+$errorGrid.Size = New-Object System.Drawing.Size(1210,150)
 $errorGrid.ReadOnly = $true
 $errorGrid.AllowUserToAddRows = $false
 $errorGrid.AllowUserToDeleteRows = $false
 $errorGrid.AutoSizeColumnsMode = "Fill"
+$errorGrid.ScrollBars = "Both"
 $form.Controls.Add($errorGrid)
 
 # =========================
 # Funções auxiliares
 # =========================
 
-# Carregar status dos serviços Exchange
 function Load-ServiceStatus {
     $exchangeServices = "MSExchangeIS","MSExchangeTransport","MSExchangeFrontEndTransport","MSExchangeMailboxAssistants"
     $services = Get-Service | Where-Object { $_.Name -in $exchangeServices } |
@@ -83,7 +87,6 @@ function Load-ServiceStatus {
     $serviceGrid.DataSource = $dataTable
 }
 
-# Carregar erros do Event Viewer relacionados ao Exchange
 function Load-ExchangeErrors {
     $events = Get-WinEvent -LogName "Application" -MaxEvents 50 |
         Where-Object { $_.ProviderName -like "MSExchange*" -and $_.LevelDisplayName -in "Error","Warning" } |
@@ -107,8 +110,6 @@ function Load-ExchangeErrors {
 # =========================
 # Eventos
 # =========================
-
-# Botão: Carregar filas
 $btnLoadQueues.Add_Click({
     $queueList.Items.Clear()
     try {
@@ -123,7 +124,6 @@ $btnLoadQueues.Add_Click({
     }
 })
 
-# Ao selecionar uma fila -> carregar mensagens
 $queueList.Add_SelectedIndexChanged({
     $selected = $queueList.SelectedItem
     if ($selected) {
@@ -152,7 +152,6 @@ $queueList.Add_SelectedIndexChanged({
                 [System.Windows.Forms.MessageBox]::Show("Nenhuma mensagem na fila $queueName", "Fila Vazia")
                 $msgGrid.DataSource = $null
             }
-
         } catch {
             [System.Windows.Forms.MessageBox]::Show("Erro ao acessar fila: $_", "Erro",
                 [System.Windows.Forms.MessageBoxButtons]::OK,
